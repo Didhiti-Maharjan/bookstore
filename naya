@@ -1,0 +1,599 @@
+#include<iostream>
+
+#include<fstream>
+
+#include<cstring>
+
+#define MAX 100
+
+using namespace std;
+
+ 
+
+class Movie {
+
+public:
+
+    int mid;
+
+    char mname[40];
+
+    int total;
+
+    char times[10];
+
+    int available;
+
+    float price;
+
+ 
+
+    void write_mov(Movie[], int);
+
+    int read_mov(Movie[], int);
+
+    void display_movies(Movie[], int);
+
+};
+
+ 
+
+class User {
+
+public:
+
+    char username[30];
+
+    char password[20];
+
+ 
+
+    void write_use(User[], int);
+
+    int read_use(User[]);
+
+    int login(User[], int, char[], char[]);
+
+    void signin(User[], int *);
+
+};
+
+ 
+
+class Ticket {
+
+public:
+
+    char username[30];
+
+    int mid;
+
+    int seats;
+
+};
+
+ 
+
+void firstmain();
+
+void displayforuser();
+
+void book(Movie[], int, Ticket[], int *, int);
+
+void cancel(Movie[], int, Ticket[], int *, int);
+
+ 
+
+int main() {
+
+    User u[MAX];
+
+    Movie m;
+
+    int usenum = u[0].read_use(u);
+
+    Movie movieList[5] = {
+
+        {1,"Interstellar",100,"8:00 am",100,500},
+
+        {2,"Inside Out",80,"1:00 pm",80,350},
+
+        {3,"Animal",90,"3:00 pm",90,350},
+
+        {4,"Jatra",60,"10:00 am",60,350},
+
+        {5,"Zootopia",70,"9:00 pm",70,450},
+
+    };
+
+    int movnum = 5;
+
+    m.read_mov(movieList, movnum);
+
+    Ticket t[400];
+
+    int ticknum = 0;
+
+    int loggedinid = -1;
+
+    while (1) {
+
+        if (loggedinid == -1) {
+
+            firstmain();
+
+            int n;
+
+            cin >> n;
+
+            if (n == 1) {
+
+                u[0].signin(u, &usenum);
+
+            } else if (n == 2) {
+
+                char username[30];
+
+                char password[20];
+
+                cout << "Enter your username: ";
+
+                cin >> username;
+
+                cout << "Enter your password: ";
+
+                cin >> password;
+
+                loggedinid = u[0].login(u, usenum, username, password);
+
+                if (loggedinid == -1) {
+
+                    cout << "\nUNSUCCESSFUL LOGIN!!!\nYou have to check username and password!!!\n";
+
+                } else {
+
+                    cout << "Successful login!!! Hello, " << username << "!\n";
+
+                }
+
+            } else if (n == 3) {
+
+                cout << "Program exit\n";
+
+                m.write_mov(movieList, movnum);
+
+               break;
+
+            } else {
+
+                cout << "Only choose from 1-3.\n";
+
+            }
+
+        } else {
+
+            displayforuser();
+
+            int ch;
+
+            cin >> ch;
+
+            switch (ch) {
+
+            case 1:
+
+                book(movieList, movnum, t, &ticknum, loggedinid);
+
+                m.write_mov(movieList, movnum);
+
+                break;
+
+            case 2:
+
+                cancel(movieList, movnum, t, &ticknum, loggedinid);
+
+                m.write_mov(movieList, movnum);
+
+                break;
+
+            case 3:
+
+                cout << "Now we have been logged out.\n";
+
+                loggedinid = -1;
+
+                m.write_mov(movieList, movnum);
+
+                break;
+
+            default:
+
+                cout << "Only choose from 1-3.\n";
+
+            }
+
+        }
+
+    }
+
+    return 0;
+
+}
+
+ 
+
+void firstmain() {
+
+    cout << "\n========================== MOVIE TICKET BOOKING SYSTEM ===============================\n";
+
+    cout << "1. Sign in\n";
+
+    cout << "2. Login\n";
+
+    cout << "3. Exit\n";
+
+    cout << "=======================================================================================\n";
+
+    cout << "\nEnter your choice: ";
+
+}
+
+ 
+
+void displayforuser() {
+
+    cout << "\n\n________________________________________________________________\n";
+
+   cout << "\n1. Book Movie Ticket\n";
+
+    cout << "2. Cancel Movie Ticket\n";
+
+    cout << "3. Logout\n";
+
+    cout << "____________________________________________________________________\n";
+
+    cout << "\nEnter your choice: ";
+
+}
+
+ 
+
+void Movie::write_mov(Movie m[], int movnum) {
+
+    ofstream file("movieees.txt");
+
+    for (int p = 0; p < movnum; p++) {
+
+        file << m[p].mid << " " << m[p].available << "\n";
+
+    }
+
+    file.close();
+
+}
+
+ 
+
+int Movie::read_mov(Movie m[], int movnum) {
+
+    ifstream file("movieees.txt");
+
+    if (!file) {
+
+        return 0;
+
+    }
+
+    for (int p = 0; p < movnum; p++) {
+
+        file >> m[p].mid >> m[p].available;
+
+    }
+
+    file.close();
+
+    return 1;
+
+}
+
+ 
+
+void User::write_use(User u[], int usenum) {
+
+    ofstream file("users.txt");
+
+    for (int i = 0; i < usenum; i++) {
+
+        file << u[i].username << " " << u[i].password << "\n";
+
+    }
+
+    file.close();
+
+}
+
+ 
+
+int User::read_use(User u[]) {
+
+    ifstream file("users.txt");
+
+    if (!file) {
+
+        return 0;
+
+    }
+
+    int i = 0;
+
+    while (file >> u[i].username >> u[i].password) {
+
+        i++;
+
+    }
+
+    file.close();
+
+    return i;
+
+}
+
+ 
+
+int User::login(User u[], int usenum, char username[], char password[]) {
+
+    for (int i = 0; i < usenum; i++) {
+
+        if (strcmp(u[i].username, username) == 0 && strcmp(u[i].password, password) == 0) {
+
+            return i;
+
+        }
+
+    }
+
+    return -1;
+
+}
+
+ 
+
+void User::signin(User u[], int *usenum) {
+
+    char username[30], password[20];
+
+    cout << "Enter your username: ";
+
+    cin >> username;
+
+    cout << "Enter the password: ";
+
+    cin >> password;
+
+ 
+
+    for (int i = 0; i < *usenum; i++) {
+
+        if (strcmp(u[i].username, username) == 0) {
+
+            cout << "Username already in existence, please use another one!!!\n";
+
+            return;
+
+        }
+
+    }
+
+ 
+
+    strcpy(u[*usenum].username, username);
+
+    strcpy(u[*usenum].password, password);
+
+    (*usenum)++;
+
+    write_use(u, *usenum);
+
+    cout << "\n~~SUCCESSFUL REGISTRATION!!!~~ Login can be done!!\n";
+
+}
+
+ 
+
+void book(Movie m[], int movnum, Ticket t[], int *ticknum, int uid) {
+
+    m[0].read_mov(m, movnum);
+
+    cout << "\nID\tMovie Name\tTotal seat\tTime\t\tAvailable seats\tPrice (Rs)\n";
+
+    cout << "-------------------------------------------------------------------------------------\n";
+
+    for (int q = 0; q < movnum; q++) {
+
+        cout << m[q].mid << "\t" << m[q].mname << "\t\t" << m[q].total << "\t\t" << m[q].times << "\t" << m[q].available << "\t\t" << m[q].price << "\n";
+
+    }
+
+ 
+
+    int mid;
+
+    cout << "\nEnter Movie ID: ";
+
+    cin >> mid;
+
+    int mindex = -1;
+
+    for (int i = 0; i < movnum; i++) {
+
+        if (m[i].mid == mid) {
+
+            mindex = i;
+
+            break;
+
+        }
+
+    }
+
+ 
+
+    if (mindex == -1) {
+
+        cout << "Movie not found!!!\n";
+
+    } else if (m[mindex].available == 0) {
+
+        cout << "Seats are fully booked, SORRY!!\n";
+
+    } else {
+
+        char username[30];
+
+        cout << "Enter your username: ";
+
+        cin >> username;
+
+        int seats;
+
+        cout << "Enter number of seats to book: ";
+
+        cin >> seats;
+
+ 
+
+        if (seats > m[mindex].available) {
+
+            cout << "Not enough available seats! Available seats: " << m[mindex].available << "\n";
+
+        } else {
+
+            for (int i = 0; i < seats; i++) {
+
+                strcpy(t[*ticknum].username, username);
+
+                t[*ticknum].seats = seats;
+
+                t[*ticknum].mid = mid;
+
+                (*ticknum)++;
+
+                m[mindex].available--;
+
+            }
+
+            cout << "SUCCESSFUL Ticket Booking!!! You have booked " << seats << " seats.\n";
+
+            cout << "\n---------|TICKET|----------\n";
+
+            cout << "Username     : " << username << "\n";
+
+            cout << "Movie        : " << m[mid - 1].mname << "\n";
+
+            cout << "No. of seats : " << seats << "\n";
+
+            cout << "Price        : " << m[mid - 1].price * seats << "\n";
+
+            cout << "-----------------------------\n";
+
+        }
+
+    }
+
+}
+
+ 
+
+void cancel(Movie m[], int movnum, Ticket t[], int *ticknum, int uid) {
+
+    cout << "ID\tMovie Name\tTotal seat\tTime\t\tAvailable seats\tPrice (Rs)\n";
+
+    cout << "-------------------------------------------------------------------------------------\n";
+
+    for (int q = 0; q < movnum; q++) {
+
+        cout << m[q].mid << "\t" << m[q].mname << "\t\t" << m[q].total << "\t\t" << m[q].times << "\t" << m[q].available << "\t\t" << m[q].price << "\n";
+
+    }
+
+ 
+
+    char username[30];
+
+    int mid;
+
+    cout << "\nEnter your username: ";
+
+    cin >> username;
+
+    cout << "Enter the movie ID: ";
+
+    cin >> mid;
+
+    cout << "Enter number of tickets to cancel: ";
+
+    int canctick;
+
+    cin >> canctick;
+
+ 
+
+    int f = 0, cancell = 0;
+
+    for (int i = 0; i < *ticknum && canctick > 0; i++) {
+
+        if (strcmp(t[i].username, username) == 0 && t[i].mid == mid) {
+
+            if (t[i].seats >= canctick) {
+
+                int mindex = -1;
+
+                for (int j = 0; j < movnum; j++) {
+
+                    if (m[j].mid == mid) {
+
+                        mindex = j;
+
+                        break;
+
+                    }
+
+                }
+
+                m[mindex].available++;
+
+                for (int j = i; j < (*ticknum) - 1; j++) {
+
+                    t[j] = t[j + 1];
+
+                }
+
+                (*ticknum)--;
+
+                canctick--;
+
+                f = 1;
+
+                cancell++;
+
+                i--;
+
+            }
+
+        }
+
+    }
+
+ 
+
+    if (f) {
+
+        cout << "Cancellation success!!! You have cancelled " << cancell << " tickets.\n";
+
+    } else {
+
+        cout << username << " name is not here for this movie or not enough tickets to cancel.\n";
+
+    }
+
+}
